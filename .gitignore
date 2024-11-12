@@ -1,0 +1,4 @@
+/media/keys/*
+/media/uploads/*
+/media/wm_uploads/*
+.env

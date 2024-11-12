@@ -1,0 +1,68 @@
+{
+	"info": {
+		"_postman_id": "8ce9123b-956f-4a57-9972-5589d3d90c24",
+		"name": "Be-Proj",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24991991"
+	},
+	"item": [
+		{
+			"name": "test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/images/test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"images",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image",
+							"type": "file",
+							"src": "/home/omkar/Desktop/temp2.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8000/images/upload/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"images",
+						"upload",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verify",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
