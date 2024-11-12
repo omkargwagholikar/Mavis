@@ -1,4 +1,5 @@
-/media/keys/*
-/media/uploads/*
-/media/wm_uploads/*
+/media/keys/private_key.pem
+/media/keys/public_key.pem
+# /media/uploads/*
+# /media/wm_uploads/*
 .env

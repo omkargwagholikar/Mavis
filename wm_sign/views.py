@@ -16,7 +16,8 @@ def watermark_image(file_path):
 @csrf_exempt
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
-        image_file = request.FILES['image']
+        # image_file = request.FILES['image']
+        image_file = request.FILES.get('image')
 
         file_path = os.path.join(settings.MEDIA_ROOT, 'uploads', image_file.name)
         
@@ -25,10 +26,8 @@ def upload_image(request):
                 destination.write(chunk)
 
 
-        # TODO: Add watermarking code here
-        # watermarked_image_path = embed_watermark(image_path, original_hash)
-        
         image_hash = get_hash(file_path=file_path)
+        watermarked_image_path = embed_watermark(image_name=image_file.name, hash_value=image_hash)
         sign_hash = encrypt_string(image_hash)
 
         try:
@@ -46,9 +45,18 @@ def upload_image(request):
                 },
                 status=400
             )
-
-        # timestamp
-        return JsonResponse({'message': 'Image uploaded successfully', 'signed_hash': sign_hash}, status=200)
+        
+        try:
+            img_file = open(watermarked_image_path, 'rb')
+            response = FileResponse(img_file, content_type='image/jpeg')
+            response['Content-Disposition'] = f'attachment; filename="{image_file.name}"'
+            response['signed_hash'] = sign_hash  # Additional header to include the signed hash
+            return response
+        
+        except Exception as e:
+            return JsonResponse({'message': str(e)}, status=500)
+        
+        # return JsonResponse({'message': 'Image uploaded successfully', 'signed_hash': sign_hash}, status=200)
 
     return JsonResponse({
         'error': 'Invalid request',
@@ -70,7 +78,7 @@ def test(request):
     original_hash = get_hash(f"./media/uploads/{image_path}")
     print(f"Original Image Hash: {original_hash}")
 
-    watermarked_image_path = embed_watermark(image_path, original_hash)
+    watermarked_image_path = embed_watermark(image_name=image_path, hash_value=original_hash)
 
     extracted_hash = extract_watermark(watermarked_image_path)
     print(f"Extracted Watermark Hash: {extracted_hash}")
