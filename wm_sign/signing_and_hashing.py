@@ -9,6 +9,7 @@ from PIL import Image
 
 import json
 import piexif
+import datetime
 
 from cryptography.hazmat.primitives import serialization
 
@@ -181,12 +182,11 @@ def extract_metadata(file_path):
         print("No custom metadata found.")
         return None
 
-
 metadata = {
     "Author": "Omkar",
     "Description": "This is an example image with complex metadata.",
     "Project": {
-        "Name": "Watermarking",
+        "Name": "Provenance_Addition",
         "Version": "1.0",
         "HashAlgorithm": "SHA-256",
     },
