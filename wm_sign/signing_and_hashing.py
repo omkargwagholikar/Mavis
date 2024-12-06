@@ -7,6 +7,9 @@ import os
 import numpy as np
 from PIL import Image
 
+import json
+import piexif
+
 from cryptography.hazmat.primitives import serialization
 
 # Load the private key from the file
@@ -70,6 +73,9 @@ def get_hash(file_path):
 
 
 def get_partial_hash(file_path):
+    """
+    :param file_path: Path of PNG file (as PNG contains RGBA channels)
+    """
     # Open the Image
     img = Image.open(file_path)
 
@@ -84,25 +90,30 @@ def get_partial_hash(file_path):
     rest_bytes = rest.tobytes()
     digest = hashlib.sha256(rest_bytes).hexdigest()
 
+    # Convert the hash to binary and truncate it to the size of the first row
+    binary_hash = "".join(f"{int(char, 16):04b}" for char in digest)
+    binary_hash = binary_hash[: first_row.size * 4]
 
-    binary_hash = ''.join(f'{int(char, 16):04b}' for char in digest)
-    binary_hash = binary_hash[:first_row.size * 4]
+    for i, (r, g, b, a) in enumerate(first_row):
+        print(i, r, g, b, a)
+        b = b & 254
+        b = b | int(binary_hash[i])
 
-    for i, (r,g,b,a) in enumerate(first_row):
-            print(i, r, g, b, a)
-            b = b & 254
-            b = b | int(binary_hash[i])
+        first_row[i][2] = b
 
-            first_row[i][2] = b
-
-            if i == 254:
-                break
+        if i == 254:
+            break
 
     new_img_arr = np.vstack([first_row[np.newaxis, :, :], rest])
-    new_img = Image.fromarray(new_img_arr.astype('uint8'), 'RGBA')
-    new_img.save("/home/omkar/Desktop/MAVIS_V1/mavis/media/testing/omkar_gate_mod.png")
+    new_img = Image.fromarray(new_img_arr.astype("uint8"), "RGBA")
+
+    s = file_path.split("/")
+    s[-2] = "wm_uploads"
+    wm_uploads_path = "/".join(s)
+    new_img.save(wm_uploads_path)
 
     print(binary_hash)
+
 
 def verify_hash(file_path):
     digest = hashlib.sha256()
@@ -116,11 +127,11 @@ def verify_hash(file_path):
     rest_bytes = rest.tobytes()
     digest = hashlib.sha256(rest_bytes).hexdigest()
 
-    binary_hash = ''.join(f'{int(char, 16):04b}' for char in digest)
-    binary_hash = binary_hash[:first_row.size * 4]
+    binary_hash = "".join(f"{int(char, 16):04b}" for char in digest)
+    binary_hash = binary_hash[: first_row.size * 4]
 
     embedded_hash = ""
-    for i, (r,g,b,a) in enumerate(first_row):
+    for i, (r, g, b, a) in enumerate(first_row):
         embedded_hash += str(b & 1)
         if i == 255:
             break
@@ -130,3 +141,60 @@ def verify_hash(file_path):
             return False
 
     return True
+
+
+def add_complex_metadata(file_path, metadata_dict):
+    # Open the image
+    img = Image.open(file_path)
+
+    # Convert metadata dictionary to JSON string
+    metadata_json = json.dumps(metadata_dict)
+
+    # Add metadata to the image using piexif
+    exif_dict = {"Exif": {}}
+    exif_dict["Exif"][piexif.ExifIFD.UserComment] = metadata_json.encode("utf-8")
+    exif_bytes = piexif.dump(exif_dict)
+
+    # Save the image with the new metadata
+    output_path = file_path.replace(".png", "_with_metadata.png")
+    img.save(output_path, exif=exif_bytes)
+    print(f"Image with metadata saved at: {output_path}")
+
+
+def extract_metadata(file_path):
+    # Open the image
+    img = Image.open(file_path)
+
+    # Extract Exif data from the image
+    exif_data = img._getexif()
+
+    # Extract custom metadata (UserComment)
+    if exif_data is not None and piexif.ExifIFD.UserComment in exif_data:
+        user_comment = exif_data[piexif.ExifIFD.UserComment]
+        try:
+            metadata = json.loads(user_comment.decode("utf-8"))
+            return metadata
+        except json.JSONDecodeError:
+            print("Error decoding JSON metadata.")
+            return None
+    else:
+        print("No custom metadata found.")
+        return None
+
+
+metadata = {
+    "Author": "Omkar",
+    "Description": "This is an example image with complex metadata.",
+    "Project": {
+        "Name": "Watermarking",
+        "Version": "1.0",
+        "HashAlgorithm": "SHA-256",
+    },
+    "Timestamp": "2024-12-06T12:00:00Z",
+}
+
+file_path = "../media/testing/omkar_gate_mod.png"
+file_path_mod = "../media/testing/omkar_gate_mod_with_metadata.png"
+
+add_complex_metadata(file_path, metadata)
+print(extract_metadata(file_path_mod))
