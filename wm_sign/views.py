@@ -20,7 +20,7 @@ def upload_image(request):
         image_file = request.FILES.get('image')
 
         file_path = os.path.join(settings.MEDIA_ROOT, 'uploads', image_file.name)
-        
+
         with open(file_path, 'wb+') as destination:
             for chunk in image_file.chunks():
                 destination.write(chunk)
@@ -37,25 +37,25 @@ def upload_image(request):
             )
             uploaded_image.save()
 
-        except IntegrityError as e:    
-            return JsonResponse(data={'message':"The file seems to already exist in the database"}, status=400)
+        except IntegrityError as e:
+            return JsonResponse(data={'message':"The file seems to already exist in the database", "error":str(e)}, status=400)
         except Exception as e:
             return JsonResponse(data={
                     "message": str(e)
                 },
                 status=400
             )
-        
+
         try:
             img_file = open(watermarked_image_path, 'rb')
             response = FileResponse(img_file, content_type='image/jpeg')
             response['Content-Disposition'] = f'attachment; filename="{image_file.name}"'
             response['signed_hash'] = sign_hash  # Additional header to include the signed hash
             return response
-        
+
         except Exception as e:
             return JsonResponse({'message': str(e)}, status=500)
-        
+
         # return JsonResponse({'message': 'Image uploaded successfully', 'signed_hash': sign_hash}, status=200)
 
     return JsonResponse({
@@ -87,4 +87,3 @@ def test(request):
         return JsonResponse({"message":"The watermark matches the original hash. Verification successful."})
     else:
         JsonResponse({"message":"The watermark does not match. Verification failed."})
-
