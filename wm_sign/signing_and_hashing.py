@@ -14,13 +14,13 @@ import datetime
 from cryptography.hazmat.primitives import serialization
 
 # Load the private key from the file
-with open("../media/keys/private_key.pem", "rb") as private_file:
+with open("./media/keys/private_key.pem", "rb") as private_file:
     private_key = serialization.load_pem_private_key(
         private_file.read(), password=None, backend=default_backend()
     )
 
 # Load the public key from the file
-with open("../media/keys/public_key.pem", "rb") as public_file:
+with open("./media/keys/public_key.pem", "rb") as public_file:
     public_key = serialization.load_pem_public_key(
         public_file.read(), backend=default_backend()
     )
@@ -193,8 +193,8 @@ metadata = {
     "Timestamp": "2024-12-06T12:00:00Z",
 }
 
-file_path = "../media/testing/omkar_gate_mod.png"
-file_path_mod = "../media/testing/omkar_gate_mod_with_metadata.png"
+file_path = "./media/testing/omkar_gate_mod.png"
+file_path_mod = "./media/testing/omkar_test.jpeg"
 
-add_complex_metadata(file_path, metadata)
+# add_complex_metadata(file_path, metadata)
 print(extract_metadata(file_path_mod))
